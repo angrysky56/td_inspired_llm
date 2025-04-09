@@ -91,6 +91,8 @@ python test_gpt2_instruct.py --ollama_model Hudson/gpt2-instruct:345m-q8_0 --num
 
 ### Training with TD-Inspired Reward
 
+#### Standard Training
+
 ```bash
 python train.py \
   --base_model gpt2 \
@@ -102,6 +104,38 @@ python train.py \
   --alpha 0.1 \
   --beta 0.01 \
   --gamma 0.99
+```
+
+#### LoRA Fine-Tuning
+
+For more efficient training of larger models, you can use Low-Rank Adaptation (LoRA) with our TD-inspired reward function:
+
+```bash
+python lora_trainer.py \
+  --base_model gpt2 \
+  --dataset wikitext \
+  --dataset_config wikitext-2-raw-v1 \
+  --output_dir ./lora_output \
+  --lora_r 8 \
+  --lora_alpha 16 \
+  --lora_dropout 0.05 \
+  --use_8bit  # Enable for larger models
+  --batch_size 4 \
+  --num_epochs 3 \
+  --alpha 0.1 \
+  --beta 0.01 \
+  --gamma 0.99
+```
+
+For 4-bit quantization (for even larger models):
+
+```bash
+python lora_trainer.py \
+  --base_model meta-llama/Llama-2-7b-hf \
+  --use_4bit \
+  --lora_r 16 \
+  --lora_alpha 32 \
+  --output_dir ./llama2_lora_output
 ```
 
 ### Ollama Integration
@@ -165,7 +199,15 @@ Implements a PPO-based reinforcement learning algorithm for fine-tuning language
 
 Tools for evaluating and comparing different models using the TD-inspired reward function.
 
-### 4. Ollama Integration (`ollama_integration.py`, `ollama_finetune.py`)
+### 4. LoRA Fine-Tuning (`lora_trainer.py`)
+
+Implements Low-Rank Adaptation (LoRA) fine-tuning with TD-inspired reward for efficient training of large language models:
+
+- Supports 8-bit and 4-bit quantization for larger models
+- Custom `TDRewardTrainer` class that incorporates TD reward into the loss function
+- Compatible with Hugging Face's PEFT library
+
+### 5. Ollama Integration (`ollama_integration.py`, `ollama_finetune.py`)
 
 Integration with Ollama for local deployment and fine-tuning of models.
 

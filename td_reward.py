@@ -204,6 +204,14 @@ class TDRewardModel:
         if isinstance(actual_next_token, str):
             actual_next_token = self.tokenizer.encode(actual_next_token, return_tensors="pt")[0, 0]
         
+        # Debug information
+        print(f"Context device: {context.device}")
+        print(f"Prediction device: {prediction.device if isinstance(prediction, torch.Tensor) else 'N/A'}")
+        print(f"Actual next token device: {actual_next_token.device if isinstance(actual_next_token, torch.Tensor) else 'N/A'}")
+        print(f"Language model device: {self.language_model.device}")
+        print(f"Belief state model device: {next(self.belief_state_model.parameters()).device}")
+        print(f"Value function device: {next(self.value_function.parameters()).device}")
+        
         # Ensure all tensors are on the same device
         device = self.language_model.device
         if context.device != device:
@@ -212,6 +220,10 @@ class TDRewardModel:
             prediction = prediction.to(device)
         if isinstance(actual_next_token, torch.Tensor) and actual_next_token.device != device:
             actual_next_token = actual_next_token.to(device)
+        
+        # Make sure model components are on the right device
+        self.belief_state_model = self.belief_state_model.to(device)
+        self.value_function = self.value_function.to(device)
         
         # Make sure actual_next_token has the right shape for concatenation
         if len(actual_next_token.shape) == 1:
@@ -222,6 +234,11 @@ class TDRewardModel:
         elif len(actual_next_token.shape) == 0:
             # This is a scalar
             actual_next_token = actual_next_token.unsqueeze(0).unsqueeze(0)
+        
+        # After correcting devices
+        print(f"Context device after correction: {context.device}")
+        print(f"Prediction device after correction: {prediction.device if isinstance(prediction, torch.Tensor) else 'N/A'}")
+        print(f"Actual next token device after correction: {actual_next_token.device if isinstance(actual_next_token, torch.Tensor) else 'N/A'}")
         
         # Get model outputs
         with torch.no_grad():
